@@ -35,7 +35,11 @@ void AHorrorCharacter::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	// start the sprint tick timer
-	GetWorld()->GetTimerManager().SetTimer(SprintTimer, this, &AHorrorCharacter::SprintFixedTick, SprintFixedTickTime, true);
+	GetWorld()->GetTimerManager().SetTimer(
+		SprintTimer,
+		this, 
+		&AHorrorCharacter::SprintFixedTick,
+		SprintFixedTickTime, true);
 }
 
 void AHorrorCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
