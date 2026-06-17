@@ -8,6 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Museum/Interactable.h"
 #include "UnFramedCameraManager.h"
 #include "Museum/UI/MuseumQuizUI.h"
 #include "UFPlayerCharacter.h"
@@ -89,6 +91,11 @@ void AUFPlayerController::SetupInputComponent()
 		if (OpenInventoryAction)
 		{
 			EnhancedInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &AUFPlayerController::ToggleInventory);
+		}
+
+		if (InteractAction)
+		{
+			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AUFPlayerController::HandleInteract);
 		}
 	}
 
@@ -193,4 +200,51 @@ void AUFPlayerController::HideMuseumQuizUI()
 	{
 		MuseumQuizUI->SetWidgetVisibility(false);
 	}
+}
+
+void AUFPlayerController::HandleInteract()
+{
+	FHitResult HitResult;
+	if (AInteractable* InteractableArtwork = TraceInteractableArtwork(HitResult))
+	{
+		LastInteractedArtwork = InteractableArtwork;
+		InteractableArtwork->OnInteracted(this);
+
+		//UE_LOG(LogUnFramed, Log, TEXT("Interacted with artwork '%s'."), *InteractableArtwork->GetArtworkName().ToString());
+	}
+}
+
+AInteractable* AUFPlayerController::TraceInteractableArtwork(FHitResult& OutHit) const
+{
+	FVector ViewLocation = FVector::ZeroVector;
+	FRotator ViewRotation = FRotator::ZeroRotator;
+	GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	const FVector TraceStart = ViewLocation;
+	const FVector TraceEnd = TraceStart + (ViewRotation.Vector() * InteractTraceDistance);
+
+	TArray<AActor*> ActorsToIgnore;
+	if (const APawn* ControlledPawn = GetPawn())
+	{
+		ActorsToIgnore.Add(const_cast<APawn*>(ControlledPawn));
+	}
+
+	const bool bHit = UKismetSystemLibrary::SphereTraceSingle(
+		this,
+		TraceStart,
+		TraceEnd,
+		InteractTraceRadius,
+		InteractTraceChannel,
+		false,
+		ActorsToIgnore,
+		bDrawInteractTraceDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		OutHit,
+		true);
+
+	if (!bHit)
+	{
+		return nullptr;
+	}
+
+	return Cast<AInteractable>(OutHit.GetActor());
 }
