@@ -11,6 +11,7 @@ class UMuseumQuizUI;
 class UInputAction;
 class UUserWidget;
 class UUFPlayerUI;
+class AInteractable;
 
 /**
  * Default player controller for the project.
@@ -42,6 +43,22 @@ protected:
 	/** Inventory toggle input action */
 	UPROPERTY(EditAnywhere, Category="UF|Inventory")
 	TObjectPtr<UInputAction> OpenInventoryAction;
+
+	/** Interact input action */
+	UPROPERTY(EditAnywhere, Category="UF|Interaction")
+	TObjectPtr<UInputAction> InteractAction;
+
+	UPROPERTY(EditAnywhere, Category="UF|Interaction", meta=(ClampMin="0.0"))
+	float InteractTraceDistance = 350.0f;
+
+	UPROPERTY(EditAnywhere, Category="UF|Interaction", meta=(ClampMin="0.0"))
+	float InteractTraceRadius = 35.0f;
+
+	UPROPERTY(EditAnywhere, Category="UF|Interaction")
+	TEnumAsByte<ETraceTypeQuery> InteractTraceChannel = UEngineTypes::ConvertToTraceType(ECC_Visibility);
+
+	UPROPERTY(EditAnywhere, Category="UF|Interaction")
+	bool bDrawInteractTraceDebug = false;
 
 	/** Inventory widget class */
 	UPROPERTY(EditAnywhere, Category="UF|Inventory")
@@ -109,6 +126,13 @@ protected:
 	bool ShouldUseTouchControls() const;
 
 private:
+	UFUNCTION()
+	void HandleInteract();
+
+	AInteractable* TraceInteractableArtwork(FHitResult& OutHit) const;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AInteractable> LastInteractedArtwork;
 
 	bool bInventoryOpen = false;
 };
