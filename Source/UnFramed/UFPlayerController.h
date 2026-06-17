@@ -7,7 +7,9 @@
 #include "UFPlayerController.generated.h"
 
 class UInputMappingContext;
+class UInputAction;
 class UUserWidget;
+class UUFPlayerUI;
 
 /**
  * Default player controller for the project.
@@ -22,11 +24,23 @@ protected:
 
 	/** Type of UI widget to spawn */
 	UPROPERTY(EditAnywhere, Category="UF|UI")
-	TSubclassOf<UUserWidget> PlayerUIClass;
+	TSubclassOf<UUFPlayerUI> PlayerUIClass;
 
 	/** Pointer to the UI widget */
 	UPROPERTY()
-	TObjectPtr<UUserWidget> PlayerUI;
+	TObjectPtr<UUFPlayerUI> PlayerUI;
+
+	/** Inventory toggle input action */
+	UPROPERTY(EditAnywhere, Category="UF|Inventory")
+	TObjectPtr<UInputAction> OpenInventoryAction;
+
+	/** Inventory widget class */
+	UPROPERTY(EditAnywhere, Category="UF|Inventory")
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+	/** Inventory widget instance */
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> InventoryWidget;
 
 public:
 
@@ -63,6 +77,19 @@ protected:
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
 
+	UFUNCTION(BlueprintCallable, Category="UF|Inventory")
+	void ToggleInventory();
+
+	UFUNCTION(BlueprintCallable, Category="UF|Inventory")
+	void SetInventoryOpen(bool bOpen);
+
+	UFUNCTION(BlueprintPure, Category="UF|Inventory")
+	bool IsInventoryOpen() const { return bInventoryOpen; }
+
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
+
+private:
+
+	bool bInventoryOpen = false;
 };

@@ -4,9 +4,12 @@
 #include "UFPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
+#include "InputAction.h"
 #include "UnFramedCameraManager.h"
 #include "UFPlayerCharacter.h"
+#include "UFPlayerUI.h"
 #include "Blueprint/UserWidget.h"
 #include "UnFramed.h"
 #include "Widgets/Input/SVirtualJoystick.h"
@@ -54,11 +57,12 @@ void AUFPlayerController::OnPossess(APawn* InPawn)
 			{
 				if (PlayerUIClass)
 				{
-					PlayerUI = CreateWidget<UUserWidget>(this, PlayerUIClass);
+					PlayerUI = CreateWidget<UUFPlayerUI>(this, PlayerUIClass);
 
 					if (PlayerUI)
 					{
 						PlayerUI->AddToViewport(0);
+						PlayerUI->SetupCharacter(UFPlayerCharacter);
 					}
 					else
 					{
@@ -77,6 +81,14 @@ void AUFPlayerController::OnPossess(APawn* InPawn)
 void AUFPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (OpenInventoryAction)
+		{
+			EnhancedInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &AUFPlayerController::ToggleInventory);
+		}
+	}
 
 	// only add IMCs for local player controllers
 	if (IsLocalPlayerController())
@@ -98,6 +110,48 @@ void AUFPlayerController::SetupInputComponent()
 				}
 			}
 		}
+	}
+}
+
+void AUFPlayerController::ToggleInventory()
+{
+	SetInventoryOpen(!bInventoryOpen);
+}
+
+void AUFPlayerController::SetInventoryOpen(bool bOpen)
+{
+	bInventoryOpen = bOpen;
+
+	if (!InventoryWidget && InventoryWidgetClass)
+	{
+		InventoryWidget = CreateWidget<UUserWidget>(this, InventoryWidgetClass);
+		if (InventoryWidget)
+		{
+			InventoryWidget->AddToViewport(10);
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	if (InventoryWidget)
+	{
+		InventoryWidget->SetVisibility(bInventoryOpen ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	bShowMouseCursor = bInventoryOpen;
+
+	if (bInventoryOpen)
+	{
+		FInputModeGameAndUI InputMode;
+		InputMode.SetHideCursorDuringCapture(false);
+		if (InventoryWidget)
+		{
+			InputMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+		}
+		SetInputMode(InputMode);
+	}
+	else
+	{
+		SetInputMode(FInputModeGameOnly());
 	}
 }
 
