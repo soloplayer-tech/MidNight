@@ -9,6 +9,7 @@
 #include "Components/SpotLightComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
+#include "UFInventoryComponent.h"
 
 AUFPlayerCharacter::AUFPlayerCharacter()
 {
@@ -22,6 +23,8 @@ AUFPlayerCharacter::AUFPlayerCharacter()
 	SpotLight->AttenuationRadius = 1050.0f;
 	SpotLight->InnerConeAngle = 18.7f;
 	SpotLight->OuterConeAngle = 45.24f;
+
+	InventoryComponent = CreateDefaultSubobject<UUFInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void AUFPlayerCharacter::BeginPlay()

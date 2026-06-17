@@ -18,6 +18,16 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
+    <list default="true" id="74e03004-93de-4484-a1a0-5fdf1ff95d97" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Unframed/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Unframed/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/PJH/Blueprints/BP_UFPlayerController.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/PJH/Blueprints/BP_UFPlayerController.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/PJH/Input/IMC_Player.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/PJH/Input/IMC_Player.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/PJH/UI/UI_Stamina.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/PJH/UI/UI_Stamina.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/UnFramed/UFPlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/UnFramed/UFPlayerCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/UnFramed/UFPlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/UnFramed/UFPlayerCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/UnFramed/UFPlayerController.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/UnFramed/UFPlayerController.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/UnFramed/UFPlayerController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/UnFramed/UFPlayerController.h" afterDir="false" />
+    </list>
     <list default="true" id="74e03004-93de-4484-a1a0-5fdf1ff95d97" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -188,7 +198,6 @@
       <workItem from="1781678049142" duration="574000" />
       <workItem from="1781678653685" duration="165000" />
       <workItem from="1781678853359" duration="1124000" />
-      <workItem from="1781682761011" duration="45000" />
     </task>
     <servers />
   </component>

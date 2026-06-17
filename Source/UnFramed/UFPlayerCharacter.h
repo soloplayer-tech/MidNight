@@ -8,6 +8,7 @@
 
 class USpotLightComponent;
 class UInputAction;
+class UUFInventoryComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUFPlayerSprintMeterUpdatedDelegate, float, Percentage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUFPlayerSprintStateChangedDelegate, bool, bSprinting);
@@ -75,6 +76,9 @@ public:
 	/** Delegate called when we start and stop sprinting */
 	FUFPlayerSprintStateChangedDelegate OnSprintStateChanged;
 
+	UFUNCTION(BlueprintPure, Category="Inventory")
+	UUFInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
 protected:
 
 	/** Constructor */
@@ -99,4 +103,9 @@ protected:
 
 	/** Called while sprinting at a fixed time interval */
 	void SprintFixedTick();
+
+private:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UUFInventoryComponent> InventoryComponent;
 };

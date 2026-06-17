@@ -99,3 +99,6 @@ DerivedDataCache/*
 
 Plugins/**/DerivedDataCache/*
 
+#rider파일
+*.idea
+
