@@ -18,16 +18,7 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="74e03004-93de-4484-a1a0-5fdf1ff95d97" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/Content/FirstPerson/Blueprints/BP_FirstPersonCharacter.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/FirstPerson/Blueprints/BP_FirstPersonGameMode.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/FirstPerson/Blueprints/BP_FirstPersonPlayerController.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/FirstPerson/Lvl_FirstPerson.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/FirstPerson/Lvl_FirstPerson.umap" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Input/IMC_Default.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Input/IMC_Default.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Variant_Horror/Blueprints/BP_HorrorCharacter.uasset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Variant_Horror/Blueprints/BP_HorrorGameMode.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Variant_Horror/Blueprints/BP_HorrorGameMode.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/UnFramed/Variant_Horror/HorrorCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/UnFramed/Variant_Horror/HorrorCharacter.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="74e03004-93de-4484-a1a0-5fdf1ff95d97" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -197,6 +188,7 @@
       <workItem from="1781678049142" duration="574000" />
       <workItem from="1781678653685" duration="165000" />
       <workItem from="1781678853359" duration="1124000" />
+      <workItem from="1781682761011" duration="45000" />
     </task>
     <servers />
   </component>
