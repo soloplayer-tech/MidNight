@@ -7,9 +7,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SpotLightComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputAction.h"
 #include "UFInventoryComponent.h"
+#include "UFCameraPickup.h"
 
 AUFPlayerCharacter::AUFPlayerCharacter()
 {
@@ -23,6 +25,15 @@ AUFPlayerCharacter::AUFPlayerCharacter()
 	SpotLight->AttenuationRadius = 1050.0f;
 	SpotLight->InnerConeAngle = 18.7f;
 	SpotLight->OuterConeAngle = 45.24f;
+
+	HeldCameraMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeldCameraMesh"));
+	HeldCameraMesh->SetupAttachment(GetFirstPersonCameraComponent());
+	HeldCameraMesh->SetRelativeLocationAndRotation(FVector(22.0f, 18.0f, -18.0f), FRotator(8.0f, -18.0f, -8.0f));
+	HeldCameraMesh->SetRelativeScale3D(FVector(0.65f));
+	HeldCameraMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HeldCameraMesh->SetCastShadow(false);
+	HeldCameraMesh->SetOnlyOwnerSee(true);
+	HeldCameraMesh->SetHiddenInGame(true);
 
 	InventoryComponent = CreateDefaultSubobject<UUFInventoryComponent>(TEXT("InventoryComponent"));
 }
@@ -63,6 +74,17 @@ void AUFPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		// Sprinting
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AUFPlayerCharacter::DoStartSprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AUFPlayerCharacter::DoEndSprint);
+
+		if (CameraAimAction)
+		{
+			EnhancedInputComponent->BindAction(CameraAimAction, ETriggerEvent::Started, this, &AUFPlayerCharacter::BeginCameraAim);
+			EnhancedInputComponent->BindAction(CameraAimAction, ETriggerEvent::Completed, this, &AUFPlayerCharacter::EndCameraAim);
+		}
+
+		if (CameraCaptureAction)
+		{
+			EnhancedInputComponent->BindAction(CameraCaptureAction, ETriggerEvent::Started, this, &AUFPlayerCharacter::CapturePhoto);
+		}
 	}
 }
 
@@ -140,4 +162,53 @@ void AUFPlayerCharacter::SprintFixedTick()
 
 	// broadcast the sprint meter updated delegate
 	OnSprintMeterUpdated.Broadcast(SprintMeter / SprintTime);
+}
+
+void AUFPlayerCharacter::BeginCameraAim()
+{
+	if (!bHasCamera || bCameraAimActive)
+	{
+		return;
+	}
+
+	bCameraAimActive = true;
+	OnCameraAimStateChanged.Broadcast(true);
+	BP_OnCameraAimStateChanged(true);
+}
+
+void AUFPlayerCharacter::EndCameraAim()
+{
+	if (!bCameraAimActive)
+	{
+		return;
+	}
+
+	bCameraAimActive = false;
+	OnCameraAimStateChanged.Broadcast(false);
+	BP_OnCameraAimStateChanged(false);
+}
+
+void AUFPlayerCharacter::CapturePhoto()
+{
+	if (!bHasCamera || !bCameraAimActive)
+	{
+		return;
+	}
+
+	OnCameraCaptured.Broadcast();
+	BP_OnCameraPhotoCaptured();
+}
+
+bool AUFPlayerCharacter::PickupCamera(AUFCameraPickup* CameraPickup)
+{
+	if (bHasCamera || !CameraPickup)
+	{
+		return false;
+	}
+
+	bHasCamera = true;
+	HeldCameraMesh->SetHiddenInGame(false);
+	OnCameraOwnershipChanged.Broadcast(true);
+	BP_OnCameraPickedUp();
+	return true;
 }

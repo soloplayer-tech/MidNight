@@ -19,6 +19,7 @@ bool UUFInventoryComponent::AddItem(FName ItemId, int32 Count)
 	{
 		ExistingEntry->Count += Count;
 	}
+	
 	else
 	{
 		FUFInventoryEntry& NewEntry = Items.AddDefaulted_GetRef();

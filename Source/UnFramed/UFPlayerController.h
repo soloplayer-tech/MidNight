@@ -63,6 +63,14 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> InventoryWidget;
 
+	/** Camera viewfinder widget shown while the player is aiming the camera */
+	UPROPERTY(EditAnywhere, Category="UF|Camera")
+	TSubclassOf<UUserWidget> CameraFrameWidgetClass;
+
+	/** Camera viewfinder widget instance */
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> CameraFrameWidget;
+
 public:
 	AUFPlayerController();
 
@@ -120,6 +128,7 @@ private:
 
 	void BindMuseumHttpComponent(UMuseumHttpComponent* MuseumHttpComponent);
 	void UnbindMuseumHttpComponent();
+	void HandleCameraAimStateChanged(bool bActive);
 
 	UFUNCTION()
 	void HandleInteract();

@@ -47,7 +47,7 @@ void AUFPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (!IsLocalPlayerController())
+	if (IsLocalPlayerController())
 	{
 		return;
 	}
@@ -84,6 +84,19 @@ void AUFPlayerController::OnPossess(APawn* InPawn)
 			{
 				MuseumExplainUI->AddToViewport(20);
 				MuseumExplainUI->SetWidgetVisibility(false);
+			}
+
+			UFPlayerCharacter->OnCameraAimStateChanged.RemoveDynamic(this, &AUFPlayerController::HandleCameraAimStateChanged);
+			UFPlayerCharacter->OnCameraAimStateChanged.AddDynamic(this, &AUFPlayerController::HandleCameraAimStateChanged);
+
+			if (!CameraFrameWidget && CameraFrameWidgetClass)
+			{
+				CameraFrameWidget = CreateWidget<UUserWidget>(this, CameraFrameWidgetClass);
+				if (CameraFrameWidget)
+				{
+					CameraFrameWidget->AddToViewport(20);
+					CameraFrameWidget->SetVisibility(ESlateVisibility::Collapsed);
+				}
 			}
 		}
 	}
@@ -220,6 +233,23 @@ void AUFPlayerController::HideMuseumQuizUI()
 	if (MuseumQuizUI)
 	{
 		MuseumQuizUI->SetWidgetVisibility(false);
+	}
+}
+
+void AUFPlayerController::HandleCameraAimStateChanged(bool bActive)
+{
+	if (!CameraFrameWidget && CameraFrameWidgetClass)
+	{
+		CameraFrameWidget = CreateWidget<UUserWidget>(this, CameraFrameWidgetClass);
+		if (CameraFrameWidget)
+		{
+			CameraFrameWidget->AddToViewport(20);
+		}
+	}
+
+	if (CameraFrameWidget)
+	{
+		CameraFrameWidget->SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
 }
 
