@@ -1,0 +1,48 @@
+{
+  "_comment": "언리얼 로컬 폴백 번들. 필드명은 docs/명세서/Unframed_API명세서.xlsx(SSOT)와 일치. 'painting'은 Data Models의 Painting, '_localResponses'는 각 API 응답 모양을 그대로 흉내낸 오프라인용 샘플.",
+
+  "painting": {
+    "paintingId": "mona_lisa",
+    "title": "모나리자",
+    "artist": "레오나르도 다 빈치",
+    "era": "르네상스 (1503–1519)",
+    "personaPrompt": "너는 명화 '모나리자' 속 인물이다. 작품, 시대(르네상스), 작가(레오나르도 다 빈치)에 대한 이야기만 한다. 그 밖의 주제는 정중히 작품 이야기로 돌린다. 답변은 1~3문장, 중학생이 이해할 수준으로 쉽게.",
+    "assetKey": "MonaLisa"
+  },
+
+  "_localResponses": {
+    "capture": {
+      "captured": true,
+      "paintingId": "mona_lisa",
+      "greeting": "드디어 날 찾았군요. 나는 모나리자랍니다.",
+      "greetingTtsUrl": ""
+    },
+    "chatSamples": [
+      {
+        "reply": "제 미소는 보는 각도와 빛에 따라 달라지도록 그려졌답니다.",
+        "ttsUrl": "",
+        "turnCount": 1,
+        "quizReady": false
+      },
+      {
+        "reply": "저를 그린 사람은 레오나르도 다 빈치예요. 르네상스 시대의 천재였죠.",
+        "ttsUrl": "",
+        "turnCount": 2,
+        "quizReady": true
+      }
+    ],
+    "quiz": {
+      "quizId": "qz_local_mona",
+      "question": "모나리자를 그린 화가는 누구일까요?",
+      "choices": ["레오나르도 다 빈치", "빈센트 반 고흐", "에드바르 뭉크"],
+      "answerIndex": 0
+    },
+    "seal": {
+      "correct": true,
+      "sealed": true,
+      "stampCount": 1,
+      "totalStamps": 3,
+      "feedback": "정확해요! 모나리자가 액자로 돌아갑니다."
+    }
+  }
+}

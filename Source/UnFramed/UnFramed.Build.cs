@@ -18,13 +18,17 @@ public class UnFramed : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"HTTP",
+			"Json",
+			"JsonUtilities"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"UnFramed",
+			"UnFramed/Museum",
 			"UnFramed/Variant_Horror",
 			"UnFramed/Variant_Horror/UI",
 			"UnFramed/Variant_Shooter",

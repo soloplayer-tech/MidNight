@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "Museum/MuseumHttpComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UnFramed.h"
 
@@ -32,6 +33,8 @@ AUnFramedCharacter::AUnFramedCharacter()
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
+
+	MuseumHttpComponent = CreateDefaultSubobject<UMuseumHttpComponent>(TEXT("MuseumHttpComponent"));
 
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
