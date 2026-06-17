@@ -3,25 +3,24 @@
 #include "UFPlayerController.h"
 
 #include "Blueprint/UserWidget.h"
+#include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
-#include "EnhancedInputComponent.h"
-#include "InputMappingContext.h"
 #include "InputAction.h"
+#include "InputMappingContext.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Museum/Interactable.h"
-#include "UnFramedCameraManager.h"
+#include "Museum/MuseumHttpComponent.h"
+#include "Museum/UI/MuseumExplainUI.h"
 #include "Museum/UI/MuseumQuizUI.h"
 #include "UFPlayerCharacter.h"
 #include "UFPlayerUI.h"
-#include "Blueprint/UserWidget.h"
 #include "UnFramed.h"
 #include "UnFramedCameraManager.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 AUFPlayerController::AUFPlayerController()
 {
-	// set the player camera manager class
 	PlayerCameraManagerClass = AUnFramedCameraManager::StaticClass();
 }
 
@@ -29,15 +28,12 @@ void AUFPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// only spawn touch controls on local player controllers
 	if (ShouldUseTouchControls() && IsLocalPlayerController())
 	{
-		// spawn the mobile controls widget
 		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);
 
 		if (MobileControlsWidget)
 		{
-			// add the controls to the player screen
 			MobileControlsWidget->AddToPlayerScreen(0);
 		}
 		else
@@ -53,30 +49,41 @@ void AUFPlayerController::OnPossess(APawn* InPawn)
 
 	if (!IsLocalPlayerController())
 	{
-		// set up the UI for the character
-		if (AUFPlayerCharacter* UFPlayerCharacter = Cast<AUFPlayerCharacter>(InPawn))
-		{
-			// create the UI
-			if (!PlayerUI)
-			{
-				if (PlayerUIClass)
-				{
-					PlayerUI = CreateWidget<UUFPlayerUI>(this, PlayerUIClass);
+		return;
+	}
 
-					if (PlayerUI)
-					{
-						PlayerUI->AddToViewport(0);
-						PlayerUI->SetupCharacter(UFPlayerCharacter);
-					}
-					else
-					{
-						UE_LOG(LogUnFramed, Error, TEXT("Could not spawn player UI widget from class '%s'."), *GetNameSafe(PlayerUIClass));
-					}
-				}
-				else
-				{
-					UE_LOG(LogUnFramed, Warning, TEXT("PlayerUIClass is not set on '%s'. Skipping player UI creation."), *GetName());
-				}
+	if (AUFPlayerCharacter* UFPlayerCharacter = Cast<AUFPlayerCharacter>(InPawn))
+	{
+		BindMuseumHttpComponent(UFPlayerCharacter->GetMuseumHttpComponent());
+
+		if (!PlayerUI && PlayerUIClass)
+		{
+			PlayerUI = CreateWidget<UUFPlayerUI>(this, PlayerUIClass);
+			if (PlayerUI)
+			{
+				PlayerUI->AddToViewport(0);
+				PlayerUI->SetupCharacter(UFPlayerCharacter);
+			}
+		}
+
+		if (!MuseumQuizUI && MuseumQuizUIClass)
+		{
+			MuseumQuizUI = CreateWidget<UMuseumQuizUI>(this, MuseumQuizUIClass);
+			if (MuseumQuizUI)
+			{
+				MuseumQuizUI->AddToViewport(15);
+				MuseumQuizUI->SetWidgetVisibility(false);
+				MuseumQuizUI->SetupWithCharacter(UFPlayerCharacter);
+			}
+		}
+
+		if (!MuseumExplainUI && MuseumExplainUIClass)
+		{
+			MuseumExplainUI = CreateWidget<UMuseumExplainUI>(this, MuseumExplainUIClass);
+			if (MuseumExplainUI)
+			{
+				MuseumExplainUI->AddToViewport(20);
+				MuseumExplainUI->SetWidgetVisibility(false);
 			}
 		}
 	}
@@ -99,10 +106,8 @@ void AUFPlayerController::SetupInputComponent()
 		}
 	}
 
-	// only add IMCs for local player controllers
 	if (IsLocalPlayerController())
 	{
-		// Add Input Mapping Contexts
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
 			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
@@ -110,7 +115,6 @@ void AUFPlayerController::SetupInputComponent()
 				Subsystem->AddMappingContext(CurrentContext, 0);
 			}
 
-			// only add these IMCs if we're not using mobile touch input
 			if (!ShouldUseTouchControls())
 			{
 				for (UInputMappingContext* CurrentContext : MobileExcludedMappingContexts)
@@ -166,8 +170,25 @@ void AUFPlayerController::SetInventoryOpen(bool bOpen)
 
 bool AUFPlayerController::ShouldUseTouchControls() const
 {
-	// are we on a mobile platform? Should we force touch?
 	return SVirtualJoystick::ShouldDisplayTouchInterface() || bForceTouchControls;
+}
+
+void AUFPlayerController::SetExplain(FName ArtworkName)
+{
+	if (!CachedMuseumHttpComponent)
+	{
+		UE_LOG(LogUnFramed, Warning, TEXT("MuseumHttpComponent is not available on '%s'."), *GetName());
+		return;
+	}
+
+	if (MuseumExplainUI)
+	{
+		MuseumExplainUI->SetArtworkName(ArtworkName);
+		MuseumExplainUI->SetExplanationText(TEXT("Loading..."));
+		MuseumExplainUI->SetWidgetVisibility(true);
+	}
+
+	CachedMuseumHttpComponent->RequestArtworkExplanation(ArtworkName);
 }
 
 bool AUFPlayerController::RequestMuseumQuiz(FName ArtworkName, bool bShowWidget)
@@ -209,8 +230,6 @@ void AUFPlayerController::HandleInteract()
 	{
 		LastInteractedArtwork = InteractableArtwork;
 		InteractableArtwork->OnInteracted(this);
-
-		//UE_LOG(LogUnFramed, Log, TEXT("Interacted with artwork '%s'."), *InteractableArtwork->GetArtworkName().ToString());
 	}
 }
 
@@ -247,4 +266,54 @@ AInteractable* AUFPlayerController::TraceInteractableArtwork(FHitResult& OutHit)
 	}
 
 	return Cast<AInteractable>(OutHit.GetActor());
+}
+
+void AUFPlayerController::HandleExplainRequestSucceeded(FName ArtworkName, FString ExplanationText)
+{
+	if (!MuseumExplainUI)
+	{
+		return;
+	}
+
+	MuseumExplainUI->SetArtworkName(ArtworkName);
+	MuseumExplainUI->SetExplanationText(ExplanationText);
+	MuseumExplainUI->SetWidgetVisibility(true);
+}
+
+void AUFPlayerController::HandleExplainRequestFailed(FString ErrorMessage)
+{
+	if (!MuseumExplainUI)
+	{
+		return;
+	}
+
+	MuseumExplainUI->SetErrorText(ErrorMessage);
+	MuseumExplainUI->SetWidgetVisibility(true);
+}
+
+void AUFPlayerController::BindMuseumHttpComponent(UMuseumHttpComponent* MuseumHttpComponent)
+{
+	if (CachedMuseumHttpComponent == MuseumHttpComponent)
+	{
+		return;
+	}
+
+	UnbindMuseumHttpComponent();
+	CachedMuseumHttpComponent = MuseumHttpComponent;
+
+	if (CachedMuseumHttpComponent)
+	{
+		CachedMuseumHttpComponent->OnExplainRequestSucceeded.AddDynamic(this, &AUFPlayerController::HandleExplainRequestSucceeded);
+		CachedMuseumHttpComponent->OnExplainRequestFailed.AddDynamic(this, &AUFPlayerController::HandleExplainRequestFailed);
+	}
+}
+
+void AUFPlayerController::UnbindMuseumHttpComponent()
+{
+	if (CachedMuseumHttpComponent)
+	{
+		CachedMuseumHttpComponent->OnExplainRequestSucceeded.RemoveDynamic(this, &AUFPlayerController::HandleExplainRequestSucceeded);
+		CachedMuseumHttpComponent->OnExplainRequestFailed.RemoveDynamic(this, &AUFPlayerController::HandleExplainRequestFailed);
+		CachedMuseumHttpComponent = nullptr;
+	}
 }

@@ -6,17 +6,15 @@
 #include "GameFramework/PlayerController.h"
 #include "UFPlayerController.generated.h"
 
-class UInputMappingContext;
-class UMuseumQuizUI;
-class UInputAction;
-class UUserWidget;
-class UUFPlayerUI;
 class AInteractable;
+class UInputAction;
+class UInputMappingContext;
+class UMuseumExplainUI;
+class UMuseumHttpComponent;
+class UMuseumQuizUI;
+class UUFPlayerUI;
+class UUserWidget;
 
-/**
- * Default player controller for the project.
- * Manages input mappings and UI.
- */
 UCLASS(abstract, config="Game")
 class UNFRAMED_API AUFPlayerController : public APlayerController
 {
@@ -24,27 +22,26 @@ class UNFRAMED_API AUFPlayerController : public APlayerController
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Museum|UI")
+	TSubclassOf<UMuseumExplainUI> MuseumExplainUIClass;
+
+	UPROPERTY()
+	TObjectPtr<UMuseumExplainUI> MuseumExplainUI;
+
+	UPROPERTY(EditAnywhere, Category="Museum|UI")
 	TSubclassOf<UMuseumQuizUI> MuseumQuizUIClass;
-	
-	/** Pointer to the UI widget */
+
 	UPROPERTY()
 	TObjectPtr<UMuseumQuizUI> MuseumQuizUI;
 
-	/** Type of UI widget to spawn */
 	UPROPERTY(EditAnywhere, Category="UF|UI")
 	TSubclassOf<UUFPlayerUI> PlayerUIClass;
-	
+
 	UPROPERTY()
 	TObjectPtr<UUFPlayerUI> PlayerUI;
 
-	
-	
-
-	/** Inventory toggle input action */
 	UPROPERTY(EditAnywhere, Category="UF|Inventory")
 	TObjectPtr<UInputAction> OpenInventoryAction;
 
-	/** Interact input action */
 	UPROPERTY(EditAnywhere, Category="UF|Interaction")
 	TObjectPtr<UInputAction> InteractAction;
 
@@ -60,11 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="UF|Interaction")
 	bool bDrawInteractTraceDebug = false;
 
-	/** Inventory widget class */
 	UPROPERTY(EditAnywhere, Category="UF|Inventory")
 	TSubclassOf<UUserWidget> InventoryWidgetClass;
 
-	/** Inventory widget instance */
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> InventoryWidget;
 
@@ -83,34 +78,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Museum|UI")
 	void HideMuseumQuizUI();
 
-protected:
+	UFUNCTION(BlueprintCallable, Category="Museum|UI")
+	void SetExplain(FName ArtworkName);
 
-	/** Input Mapping Contexts */
+protected:
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
-	/** Input Mapping Contexts */
 	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
 	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
 
-	/** Mobile controls widget to spawn */
 	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
 	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
 
-	/** Pointer to the mobile controls widget */
 	TObjectPtr<UUserWidget> MobileControlsWidget;
 
-	/** If true, the player will use UMG touch controls even if not playing on mobile platforms */
 	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
 	bool bForceTouchControls = false;
 
-	/** Gameplay Initialization */
 	virtual void BeginPlay() override;
-
-	/** Possessed pawn initialization */
 	virtual void OnPossess(APawn* InPawn) override;
-
-	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
 
 	UFUNCTION(BlueprintCallable, Category="UF|Inventory")
@@ -122,10 +109,18 @@ protected:
 	UFUNCTION(BlueprintPure, Category="UF|Inventory")
 	bool IsInventoryOpen() const { return bInventoryOpen; }
 
-	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
 
 private:
+	UFUNCTION()
+	void HandleExplainRequestSucceeded(FName ArtworkName, FString ExplanationText);
+
+	UFUNCTION()
+	void HandleExplainRequestFailed(FString ErrorMessage);
+
+	void BindMuseumHttpComponent(UMuseumHttpComponent* MuseumHttpComponent);
+	void UnbindMuseumHttpComponent();
+
 	UFUNCTION()
 	void HandleInteract();
 
@@ -133,6 +128,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<AInteractable> LastInteractedArtwork;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMuseumHttpComponent> CachedMuseumHttpComponent;
 
 	bool bInventoryOpen = false;
 };

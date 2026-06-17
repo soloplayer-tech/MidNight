@@ -15,12 +15,7 @@ class UNFRAMED_API AInteractable : public AActor
 public:
 	AInteractable();
 
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Museum|Artwork")
-	// FName ArtworkName;
-	//
-	// UFUNCTION(BlueprintCallable, Category="Museum|Artwork")
-	// FName GetArtworkName() const { return ArtworkName; }
-
+	
 	UFUNCTION(BlueprintNativeEvent, Category="Museum|Artwork")
 	void OnInteracted(APlayerController* InteractingPlayer);
 

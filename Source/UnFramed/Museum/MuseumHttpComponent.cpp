@@ -1,4 +1,4 @@
-﻿#include "Museum/MuseumHttpComponent.h"
+#include "Museum/MuseumHttpComponent.h"
 
 #include "Dom/JsonObject.h"
 #include "HttpModule.h"
@@ -75,6 +75,64 @@ bool UMuseumHttpComponent::RequestArtworkQuiz(FName ArtworkName)
 	return true;
 }
 
+bool UMuseumHttpComponent::RequestArtworkExplanation(FName ArtworkName)
+{
+	if (bIsRequestInFlight)
+	{
+		BroadcastExplainFailure(TEXT("Another HTTP request is already in flight."));
+		return false;
+	}
+
+	if (ExplainEndpointUrl.IsEmpty())
+	{
+		BroadcastExplainFailure(TEXT("ExplainEndpointUrl is empty."));
+		return false;
+	}
+
+	if (ArtworkName.IsNone())
+	{
+		BroadcastExplainFailure(TEXT("ArtworkName is None."));
+		return false;
+	}
+
+	TSharedRef<FJsonObject> RequestObject = MakeShared<FJsonObject>();
+	RequestObject->SetStringField(ArtworkNameField, ArtworkName.ToString());
+
+	FString RequestBody;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+	if (!FJsonSerializer::Serialize(RequestObject, Writer))
+	{
+		BroadcastExplainFailure(TEXT("Failed to serialize explanation request body."));
+		return false;
+	}
+
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+	HttpRequest->SetURL(ExplainEndpointUrl);
+	HttpRequest->SetVerb(TEXT("POST"));
+	HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	HttpRequest->SetHeader(TEXT("Accept"), TEXT("application/json"));
+
+	for (const TPair<FString, FString>& HeaderPair : AdditionalHeaders)
+	{
+		HttpRequest->SetHeader(HeaderPair.Key, HeaderPair.Value);
+	}
+
+	HttpRequest->SetContentAsString(RequestBody);
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UMuseumHttpComponent::HandleExplainRequestCompleted);
+
+	bIsRequestInFlight = true;
+	LastRequestedArtworkName = ArtworkName;
+
+	if (!HttpRequest->ProcessRequest())
+	{
+		bIsRequestInFlight = false;
+		BroadcastExplainFailure(TEXT("Failed to start explanation HTTP request."));
+		return false;
+	}
+
+	return true;
+}
+
 void UMuseumHttpComponent::HandleRequestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	bIsRequestInFlight = false;
@@ -101,6 +159,34 @@ void UMuseumHttpComponent::HandleRequestCompleted(FHttpRequestPtr Request, FHttp
 
 	LastResponse = ParsedResponse;
 	OnQuizRequestSucceeded.Broadcast(LastResponse);
+}
+
+void UMuseumHttpComponent::HandleExplainRequestCompleted(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	bIsRequestInFlight = false;
+
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		BroadcastExplainFailure(TEXT("HTTP explanation request failed or returned no response."));
+		return;
+	}
+
+	if (!EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		BroadcastExplainFailure(FString::Printf(TEXT("HTTP explanation request failed with status code %d."), Response->GetResponseCode()));
+		return;
+	}
+
+	FString ErrorMessage;
+	FString ExplanationText;
+	if (!TryParseExplainResponse(Response->GetContentAsString(), ExplanationText, ErrorMessage))
+	{
+		BroadcastExplainFailure(ErrorMessage);
+		return;
+	}
+
+	LastExplanationText = ExplanationText;
+	OnExplainRequestSucceeded.Broadcast(LastRequestedArtworkName, LastExplanationText);
 }
 
 bool UMuseumHttpComponent::TryParseQuizResponse(const FString& ResponseBody, FMuseumQuizResponse& OutResponse, FString& OutErrorMessage) const
@@ -132,6 +218,32 @@ bool UMuseumHttpComponent::TryParseQuizResponse(const FString& ResponseBody, FMu
 	}
 
 	return true;
+}
+
+bool UMuseumHttpComponent::TryParseExplainResponse(const FString& ResponseBody, FString& OutExplanationText, FString& OutErrorMessage) const
+{
+	TSharedPtr<FJsonObject> JsonObject;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseBody);
+	if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+	{
+		if (TryGetStringField(JsonObject, {TEXT("description"), TEXT("Description"), TEXT("explanation"), TEXT("Explanation"), TEXT("content"), TEXT("Content"), TEXT("text"), TEXT("명화설명")}, OutExplanationText))
+		{
+			return true;
+		}
+
+		OutErrorMessage = TEXT("Explanation response JSON is missing explanation text.");
+		return false;
+	}
+
+	OutExplanationText = ResponseBody;
+	OutExplanationText.TrimStartAndEndInline();
+	if (!OutExplanationText.IsEmpty())
+	{
+		return true;
+	}
+
+	OutErrorMessage = TEXT("Explanation response was empty.");
+	return false;
 }
 
 bool UMuseumHttpComponent::TryGetStringArrayField(const TSharedPtr<FJsonObject>& JsonObject, const TArray<FString>& CandidateFields, TArray<FString>& OutValues) const
@@ -193,4 +305,9 @@ bool UMuseumHttpComponent::TryGetIntegerField(const TSharedPtr<FJsonObject>& Jso
 void UMuseumHttpComponent::BroadcastFailure(const FString& ErrorMessage)
 {
 	OnQuizRequestFailed.Broadcast(ErrorMessage);
+}
+
+void UMuseumHttpComponent::BroadcastExplainFailure(const FString& ErrorMessage)
+{
+	OnExplainRequestFailed.Broadcast(ErrorMessage);
 }
